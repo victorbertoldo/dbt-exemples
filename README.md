@@ -70,4 +70,21 @@ my-test-snowflake:
 >- Create a Database and grant privileges on the role that you've created;
 >- Create a schema by running this command on snowflake worksheets: `create schema analytics.dbt;`
 
-### Now you'll have to set the `dbt_project.yml` with some informations. Most the name, profile options and models on file end.
+### Now we'll have to set the `dbt_project.yml` with some informations. Most the name, profile options and models on file end. Notice that the profile config we have to set with the name of the profile.yml that we've setted before.
+
+After we get all this setup, we can go to the terminal and run de debug command to check if connection is working fine.
+
+``` Shell
+dbt debug
+```
+
+Then we gotta be shure that our user has all the permissions, so we can run that in snowflake:
+``` SQL
+grant create schema on database analytics to role test_role;
+grant usage on all schemas in database analytics to role test_role;
+grant usage on future schemas in database analytics to role test_role;
+grant select on all tables in database analytics to role test_role;
+grant select on future tables in database analytics to role test_role;
+grant select on all views in database analytics to role test_role;
+grant select on future views in database analytics to role test_role;
+```
