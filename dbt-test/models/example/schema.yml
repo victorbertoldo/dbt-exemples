@@ -19,3 +19,29 @@ models:
         tests:
           - unique
           - not_null
+  - name: snowflake_customer_purchases
+    description: "Total purchases for each customer in the snowflake sample data."
+    columns:
+      - name: c_custkey
+        tests:
+          - unique
+          - not_null
+  - name: snowflake_taxes_per_shipmode_priority
+    description: "Total taxes by shipping mode and priority order sample data."
+    columns:
+      - name: o_orderpriority
+        tests:
+          - not_null
+  - name: orders_ord_by_date
+    description: "Cumulative total order by date."
+    columns:
+      - name: o_orderdate
+        tests:
+          - not_null          
+  - name: orders_ord_by_date_inc
+    description: "Cumulative total order by date and incremental."
+    columns:
+      - name: id
+        tests:
+          - not_null    
+          - unique                

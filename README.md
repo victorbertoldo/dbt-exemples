@@ -88,3 +88,38 @@ grant select on future tables in database analytics to role test_role;
 grant select on all views in database analytics to role test_role;
 grant select on future views in database analytics to role test_role;
 ```
+____
+### After all that we can start to create models
+So, basically we have in dbt_project.yml file a place to set the directory to put models and by default we have the `example` folder.
+
+To create a simple table we can use this sintaxe:
+
+``` YML
+{{ config(materialized='table') }}
+
+select ...
+```
+
+To create a view:
+
+``` YML
+{{ config(materialized='view') }}
+
+select ...
+```
+
+To create an incremental table, we'll have to declare a unique key to be referenced to do the trick:
+
+``` YML
+{{ config(materialized='incremental', unique_key='<field name>') }}
+
+select ...
+```
+> But that's not all. We'll need and conditional statement like this:
+
+``` YML
+{% if is_incremental() %}
+    and <field> (select max(<field>) from {{ this}})
+{% endif %}
+
+```
