@@ -123,3 +123,14 @@ select ...
 {% endif %}
 
 ```
+
+Also we can create an ephemeral model, who's like a temp table. But the advantages is that we can use the logic of ref to uses as a pipeline.
+
+To create a view:
+
+``` YML
+{{ config(materialized='ephemeral') }}
+
+select ...
+```
+
