@@ -133,4 +133,36 @@ To create a view:
 
 select ...
 ```
+## Another parameters:
+### Now let's talk about aliases.
+DBT provides a parameter called alias, when we use that, the name of the table on the db will be the alias definied and not the name of the SQL file.
 
+Use something like this:
+
+``` YML
+{{ config(materialized='table', alias='name_of_table') }}
+
+select ...
+```
+
+### Let's set a schema
+
+We can also set a schema, see bellow:
+
+``` YML
+{{ config(materialized='table', alias='name_of_table', schema='name_of_schema') }}
+
+select ...
+```
+> You can do that without create a schema on database
+
+### Let's set a database
+
+We can also set a database, see bellow:
+
+``` YML
+{{ config(materialized='table', alias='name_of_table', database='name_of_database') }}
+
+select ...
+```
+> You can't do that without create a schema on database. So create the database first on SGBD and give all priveleges that we need, before we can run the model

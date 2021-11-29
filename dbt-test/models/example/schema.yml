@@ -44,4 +44,5 @@ models:
       - name: id
         tests:
           - not_null    
-          - unique                
+          - unique
+  - name: incremental_time
