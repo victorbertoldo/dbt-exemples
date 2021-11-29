@@ -166,3 +166,9 @@ We can also set a database, see bellow:
 select ...
 ```
 > You can't do that without create a schema on database. So create the database first on SGBD and give all priveleges that we need, before we can run the model
+
+## Advanced configuration
+
+Now let's add some variables to our dbt project.
+
+Go to the bottom of `dbt_project.yml` file and let's set the variables.
