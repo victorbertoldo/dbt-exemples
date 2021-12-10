@@ -253,5 +253,111 @@ models:
       - name: id # declare the name of column
         description: "The primary key for this table"
         tests:
-          - unique # unique test like this
+          - not_null # not null test like this
 ```
+
+To test if a field object is in a specific value:
+
+ 
+``` YML
+
+models:
+  - name: my_first_dbt_model # name of sql file
+    description: "A starter dbt model" 
+    columns: 
+      - name: id # declare the name of column
+        description: "The primary key for this table"
+        tests:
+          - accepted_values: # accepted values test like this
+              values: [1,2] 
+              quote: false
+```
+> The declaration of `quote` parameter will ensure that the value will be just like we wrote and not a string.
+
+
+## Testing Models relationship
+
+Fist we have to create a relationship.
+
+We can use the `ref` function to query on another models, so if we have a model called "sales_incomes", we can create another model from it. Let's create a model who brings only sales from Brazil, to create a dataset for this region. The sintax model would be like this:
+
+``` SQL
+
+select *
+from {{ ref('sales_incomes')}}
+where country = 'Brazil'
+
+```
+
+Now we can test this relationship by doing this on `schema.yml` file:
+
+``` YML
+# first the origin table
+models:
+  - name: sales_incomes # name of sql file
+    description: "A starter dbt model" 
+    columns: 
+      - name: id # declare the name of column
+        description: "The primary key for this table"
+        tests:
+          - not_null
+
+# Now the ref table
+
+models:
+  - name: sales_incomes_brazil 
+    description: "A starter dbt model" 
+    columns: 
+      - name: id # declare the name of column
+        description: "The primary key for this table"
+        tests:
+          - not_null
+          - relationships
+              to: ref('sales_incomes')
+              field: sales_id
+```
+> This means that sales_id field on second model needs to refers on first model. So if there is any id on second whos not on first, we'll receive an error by testing it.
+
+## Custom tests
+
+To do an exemple of a custom test, we have to go on `tests` folder and create a new sql file.
+On this case we are going to check if there are any rows returning, and we get some rows the test will fail.
+
+If we want to test if the table returns more than 10% of null values on a field, we can put a SQL file like this on tests folder:
+
+``` SQL
+-- this query will verify the percentage of null values on a field table
+
+
+SELECT
+    sum(case when id is null then 1 else 0 end) / count(*) as total_nulls
+FROM {{ref('test_first_dbt_model')}}
+
+having sum(case when id is null then 1 else 0 end) / count(*) <= 0.1
+
+```
+
+## Some tips
+
+We can also run only one model at the time or run all directory, by doing this on terminal:
+
+``` Shell
+dbt run --models dates_inc
+
+```
+>By doing this we'll get all models with that name on run
+
+
+``` Shell
+dbt run --models dbt-examples
+
+```
+>By doing this we'll get all models in this directory on run
+
+
+
+``` Shell
+dbt run --models dbt-examples.dates_inc
+
+```
+>By doing this we'll specify the model that we want to run. And we can run more than one by specifying the name.
