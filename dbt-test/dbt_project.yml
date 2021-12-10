@@ -24,6 +24,11 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_modules"
 
+vars:
+  my_first_var: True
+  my_second_var: 2020
+  my_third_var: 1
+
 
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
@@ -35,6 +40,5 @@ models:
   test_project:
     # Config indicated by + and applies to all files under models/example/
     example:
-      +materialized: view
-      vars:
-        
+      +materialized: table
+

@@ -172,3 +172,86 @@ select ...
 Now let's add some variables to our dbt project.
 
 Go to the bottom of `dbt_project.yml` file and let's set the variables.
+
+We'll have something like this:
+
+``` YML
+
+# Configuring models
+# Full documentation: https://docs.getdbt.com/docs/configuring-models
+
+# In this example config, we tell dbt to build all models in the example/ directory
+# as tables. These settings can be overridden in the individual model files
+# using the `{{ config(...) }}` macro.
+models:
+  test_project:
+    # Config indicated by + and applies to all files under models/example/
+    example:
+      +materialized: view
+
+```
+
+And now we're going to add a `vars` statement before models statement to declare our variables and the file will be like this
+
+``` YML
+
+vars:
+  my_first_var: True
+  my_second_var: 2020
+  my_third_var: 2
+
+
+# Configuring models
+# Full documentation: https://docs.getdbt.com/docs/configuring-models
+
+# In this example config, we tell dbt to build all models in the example/ directory
+# as tables. These settings can be overridden in the individual model files
+# using the `{{ config(...) }}` macro.
+models:
+  test_project:
+    # Config indicated by + and applies to all files under models/example/
+    example:
+      +materialized: table
+```
+> as we se above, we can also change the default materialization type to table. So, if the model is not definied will be table.
+
+#
+## Tests
+
+ To do the tests, we have run the command bellow and than we'll have all the tests that we've configured on `schema.yml` file. But the tests will be running on our bases, so if we want to run the tests, make sure that our models already ran before we do the testing part.
+
+ ### We have some types of tests:
+
+ ### Unique
+
+ To verify and attest if values from a column are unique just do like this:
+
+ 
+``` YML
+
+models:
+  - name: my_first_dbt_model # name of sql file
+    description: "A starter dbt model" 
+    columns: 
+      - name: id # declare the name of column
+        description: "The primary key for this table"
+        tests:
+          - unique # unique test like this
+```
+
+ ### Not Null
+
+  To verify and attest if there are any null value in a column, just do like this:
+
+ 
+``` YML
+
+models:
+  - name: my_first_dbt_model # name of sql file
+    description: "A starter dbt model" 
+    columns: 
+      - name: id # declare the name of column
+        description: "The primary key for this table"
+        tests:
+          - unique # unique test like this
+```

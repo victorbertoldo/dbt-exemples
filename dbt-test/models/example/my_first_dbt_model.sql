@@ -7,7 +7,7 @@
     Try changing "table" to "view" below
 */
 
-{{ config(materialized='table') }}
+{{ config(materialized='table', alias='first_model', schema='test') }}
 
 with source_data as (
 
@@ -17,8 +17,9 @@ with source_data as (
 
 )
 
-select *
+select *, {{var('my_first_var')}} as first_var
 from source_data
+where id >= {{var('my_third_var')}}
 
 /*
     Uncomment the line below to remove records with null `id` values
