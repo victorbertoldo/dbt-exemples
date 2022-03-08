@@ -53,3 +53,16 @@ models:
           - not_null    
           - unique
   - name: incremental_time
+
+sources:
+  - name: example_source
+    database: snowflake_sample_data  
+    schema: tpch_sf1
+    tables:
+      - name : customer
+        columns:
+          - name: c_custkey
+            tests:
+              - not_null
+              - unique
+      - name : orders

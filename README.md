@@ -84,9 +84,13 @@ grant create schema on database analytics to role test_role;
 grant usage on all schemas in database analytics to role test_role;
 grant usage on future schemas in database analytics to role test_role;
 grant select on all tables in database analytics to role test_role;
+grant create on all tables in database analytics to role test_role;
 grant select on future tables in database analytics to role test_role;
 grant select on all views in database analytics to role test_role;
 grant select on future views in database analytics to role test_role;
+GRANT USAGE ON WAREHOUSE TRANSFORM_DW TO ROLE test_role;
+grant create on all tables in database analytics to role test_role;
+grant IMPORTED PRIVILEGES on database SNOWFLAKE_SAMPLE_DATA to role test_role; 
 ```
 ____
 ### After all that we can start to create models
@@ -361,3 +365,130 @@ dbt run --models dbt-examples.dates_inc
 
 ```
 >By doing this we'll specify the model that we want to run. And we can run more than one by specifying the name.
+
+## Hooks
+
+We can run some custom code before or after a model is run, and we can do this on `dbt_project.yml` file or directly on the model parameter, in model file.
+
+### Post-run hooks
+On `dbt_project.yml` file, we can do this to run some sql commands after the model is run:
+
+``` YML	
+models:
+  test_project:
+    # Config indicated by + and applies to all files under models/example/
+    example:
+      +materialized: table
+      post-hook: 'grant usage on schema {{target.this}} to role analyst'
+```
+> Note that we can use the `{{target.this}}` macro to get the name of the schema that will be created. This is useful when we want to grant usage on a schema. And the place that we put the parameter its on the model hierarchy.
+
+We can also do this on the model file:
+``` YML
+{{ config(materialized='incremental', unique_key='d_date'), post_hook='grant select on {{this}} to role analyst' }}
+
+select *
+from "SNOWFLAKE_SAMPLE_DATA"."TPCDS_SF10TCL"."DATE_DIM"
+where d_date <= current_date
+
+{% if is_incremental() %}
+    and d_date > (select max(d_date) from {{ this }})
+{% endif %}
+```
+
+### Before-run hooks
+We can make a case to run some sql commands before the model is run and use it to get track on some informations.
+
+To do this, we can do this on `dbt_project.yml` file:
+
+``` YML	
+
+target-path: "target"  # directory which will store compiled SQL files
+clean-targets:         # directories to be removed by `dbt clean`
+  - "target"
+  - "dbt_modules"
+
+on-run-end:
+  - 'grant usage on schema analytics.dbt to role analyst'
+  - 'grant select on all tables in schema analytics.dbt to role analyst'
+  - 'grant select on all views in schema analytics.dbt to role analyst'
+on-run-start:
+  # - 'USE WAREHOUSE transform_dw'
+  - 'create table if not exists dbt.audit (model text, state text, time timestamp_ltz)'
+
+vars:
+  my_first_var: True
+  my_second_var: 2020
+  my_third_var: 1
+```
+> See the `on-run-end` and `on-run-start` section. 
+
+We can use like this to:
+
+``` YML
+models:
+  test_project:
+    # Config indicated by + and applies to all files under models/example/
+    example:
+      +materialized: table
+      post-hook: 'grant usage on schema {{target.this}} to role analyst'
+  pre-hook: "insert into dbt.audit (model, state, time) values ('{{this.name}}', 'starting model deployment', current_timestamp)"
+```
+> Note that we can use the `{{this.name}}` macro to get the name of the model that will be run.
+>   - pre-hook: executed before a model, seed or snapshot is built.
+>   - post-hook: executed after a model, seed or snapshot is built.
+>   - on-run-start: executed at the start of dbt run, dbt seed or dbt snapshot
+>   - on-run-end: executed at the end of dbt run, dbt seed or dbt snapshot 
+
+## Snapshots
+
+To create a snapshot we have to create a sql file on `snapshots` folder.
+The snapshots seems like this:
+``` SQL	
+{% snapshot first_model_snapshot %}
+    {{
+        config(
+            target_database='analytics',
+            target_schema='snapshots',
+            unique_key='id',
+            strategy='timestamp',
+            updated_at='updated_at',
+        )
+    }}
+    select * from {{ref('my_first_dbt_model')}}
+    
+{% endsnapshot %}
+```
+> The rule of thumb here, is create a snapshot from a source model.
+
+Snapshots will create a track of data change, by creating a structure similar to a SCD II. 
+See bellow:
+![](snapshot_table.png)
+
+## Sources
+A source is a model that we declare as a source to simplify the development of models and data flows.
+We declare sources on `schema.yml` file. In the bottom of this file we have a list of sources.
+
+``` YML	
+sources:
+  - name: example_source
+    database: snowflake_sample_data  
+    schema: tpch_sf1
+    tables:
+      - name : customer
+        columns:
+          - name: c_custkey
+            tests:
+              - not_null
+              - unique
+      - name : orders
+```
+> Note that we can put tests on columns.
+
+To run only sources, we can do this on terminal:
+``` Shell
+dbt run --models source:example_source+
+```
+
+## Macros
+

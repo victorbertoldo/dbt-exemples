@@ -24,6 +24,14 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_modules"
 
+on-run-end:
+  - 'grant usage on schema analytics.dbt to role analyst'
+  - 'grant select on all tables in schema analytics.dbt to role analyst'
+  - 'grant select on all views in schema analytics.dbt to role analyst'
+on-run-start:
+  # - 'USE WAREHOUSE transform_dw'
+  - 'create table if not exists dbt.audit (model text, state text, time timestamp_ltz)'
+
 vars:
   my_first_var: True
   my_second_var: 2020
@@ -41,4 +49,7 @@ models:
     # Config indicated by + and applies to all files under models/example/
     example:
       +materialized: table
+      # post-hook: 'grant usage on schema {{target.this}} to role analyst'
+  pre-hook: "insert into dbt.audit (model, state, time) values ('{{this.name}}', 'starting model deployment', current_timestamp)"
+
 

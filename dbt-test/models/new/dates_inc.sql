@@ -1,4 +1,4 @@
-{{ config(materialized='incremental', unique_key='d_date') }}
+{{ config(materialized='incremental', unique_key='d_date', post_hook='grant select on {{this}} to role analyst') }}
 
 select *
 from "SNOWFLAKE_SAMPLE_DATA"."TPCDS_SF10TCL"."DATE_DIM"
