@@ -66,3 +66,7 @@ sources:
               - not_null
               - unique
       - name : orders
+        columns:
+          - name: o_custkey
+            tests:
+              - not_null
