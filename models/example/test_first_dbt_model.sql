@@ -16,7 +16,6 @@ with source_data as (
     -- select null as id
     -- union ALL
     select 3 as id
-
 )
 
 select *
