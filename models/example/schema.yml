@@ -9,7 +9,6 @@ models:
         description: "The primary key for this table"
         tests:
           - unique
-          - not_null
   - name: test_first_dbt_model
     description: "A starter dbt model"
     columns:
@@ -53,7 +52,7 @@ models:
           - not_null    
           - unique
   - name: incremental_time
-
+# adding sources - zz
 sources:
   - name: example_source
     database: snowflake_sample_data  
