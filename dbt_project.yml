@@ -49,7 +49,14 @@ models:
     # Config indicated by + and applies to all files under models/example/
     example:
       +materialized: table
+      # tags: "daily"
+
+    new:
+      +materialized: view
+      # tags: "hourly"
       # post-hook: 'grant usage on schema {{target.this}} to role analyst'
+  # On this identation level, the pre-hook is running for all model folders 
   pre-hook: "insert into dbt.audit (model, state, time) values ('{{this.name}}', 'starting model deployment', current_timestamp)"
+
 
 

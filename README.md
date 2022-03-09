@@ -492,3 +492,107 @@ dbt run --models source:example_source+
 
 ## Macros
 
+Macros are a better way to transform data in your project. We can transform data using SQL? Of course we can.
+But we can use a lot of benefits and gain performance just by using macros.
+
+For exemple, here is a macro that will group data by ``N`` fields:
+
+``` SQL
+{% macro group_by(n) %}
+    GROUP BY
+        {% for i in range(1, n + 1) %}
+            {{ i }}
+            {% if not loop.last %}, {% endif %}
+        {% endfor %}
+{% endmacro %}
+```
+> To use that, we need to create a sql file on `macros` folder, by doing this we can reference this macro on our models, like this:
+
+``` SQL
+{{ config(materialized='table') }}
+
+
+SELECT
+    c.c_custkey,
+    c.c_name,
+    c.c_nationkey as nation,
+    sum(o.o_totalprice) as total_order_price
+from  {{ source('example_source', 'customer') }} c
+LEFT JOIN {{ source('example_source', 'orders') }} o
+ON c.c_custkey = o.o_custkey
+
+{{group_by(3)}}
+```
+> Note that we can use the `{{group_by(3)}}` macro to group data by 3 fields.
+
+## Tags
+
+Tags are a way to group models and data flows to better organize your project. You can use it to tag a models folder to specify that this models are runnig daily, weekly, monthly, etc.
+
+To do this, we can do this on `dbt_project.yml` file:
+
+``` YML	
+models:
+  test_project:
+    # Config indicated by + and applies to all files under models/example/
+    example:
+      +materialized: table
+      tags: "daily"
+
+    new:
+      +materialized: view
+      tags: "hourly"
+```
+> By doing this, we can run only models tagged with `daily` or `hourly` tag.
+
+But this may not be the best way to organize your project. You can also use tags for each model. Because if we tag a whole folder, we can run only models tagged with `daily` or `hourly` without having a context organization.
+So let's tag a model directly:
+
+``` SQL	
+{{ config(materialized='table', alias='first_model', tags="daily") }}
+
+with source_data as (
+
+    select 1 as id, 'CA' as state, '2020-01-01 00:00:00'::timestamp as updated_at
+    union all
+    select null as id, 'CT' as state, '2020-01-01 00:00:00'::timestamp as updated_at
+    union all
+    select 3 as id, 'VT' as state, '2020-03-01 00:00:00'::timestamp as updated_at
+)
+
+select *, {{var('my_first_var')}} as first_var
+from source_data
+```
+> By doing this, we can run only models tagged with `daily` or `hourly` tag.
+
+To run models by tag, we can do this on terminal:
+``` Shell
+dbt run --model tag:daily
+```
+It is possible to include multiple tags on models, so you need to create a list of tags:
+
+``` SQL	
+{{ config(materialized='table', alias='first_model', tags=["daily","region"]) }}
+
+with source_data as (
+...
+```
+## Limiting data to get faster run on development only in local environment
+We can use jinja to do it, so let's get a model to run only on development environment:
+
+``` SQL	
+{{ config(materialized='table') }}
+
+select 
+    distinct o_orderdate,
+    sum(O_TOTALPRICE) over (order by o_orderdate asc) as total_sales
+from "SNOWFLAKE_SAMPLE_DATA"."TPCH_SF1"."ORDERS"
+
+{% if target.name == 'dev' %}
+where year(o_orderdate) = 2018
+{% endif %}
+
+
+order by o_orderdate asc
+```
+> See that we use the `{% if target.name == 'dev' %}` tag to limit data to run only on development environment.
